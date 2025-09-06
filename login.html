@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Login Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #2980b9; }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>🔐 Login Dashboard</h2>
+        <input type="text" id="username" placeholder="Username" autofocus>
+        <input type="password" id="password" placeholder="Password">
+        <p id="error" class="error">❌ Username atau password salah</p>
+        <button onclick="login()">Masuk</button>
+    </div>
+
+    <script>
+        document.getElementById('password').addEventListener('keypress', e => {
+            if (e.key === 'Enter') login();
+        });
+
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const error = document.getElementById('error');
+            error.style.display = 'none';
+
+            if (!username || !password) {
+                error.textContent = "❌ Isi semua kolom";
+                error.style.display = "block";
+                return;
+            }
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // ✅ Simpan waktu login
+                    const now = new Date().toISOString();
+                    localStorage.setItem('last_login', now);
+                    // ✅ Set cookie 30 menit
+                    document.cookie = "logged_in=true; Path=/; Max-Age=1800; HttpOnly; SameSite=Lax";
+                    window.location.href = '/';
+                } else {
+                    error.textContent = "❌ " + (data.error || "Login gagal");
+                    error.style.display = "block";
+                }
+            } catch (err) {
+                error.textContent = "❌ Koneksi gagal";
+                error.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>

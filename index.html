@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Dashboard Matematika Anak</title>
+    <style>
+        /* Gaya umum halaman */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background: #f4f7fc; 
+            color: #333;
+        }
+        h1, h2 { 
+            color: #2c3e50; 
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Form input anak */
+        .form {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+        }
+        input {
+            padding: 12px;
+            margin: 8px 0;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* Tombol umum */
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+
+        /* Tabel progres */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td { 
+            padding: 14px 12px; 
+            text-align: left; 
+            border-bottom: 1px solid #eee; 
+        }
+        th { 
+            background-color: #3498db; 
+            color: white; 
+            font-weight: 600;
+        }
+        tr:hover { 
+            background-color: #f1f8ff; 
+        }
+        .bintang { 
+            font-size: 1.3em; 
+        }
+
+        /* Filter pencarian */
+        .filter {
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 20px;
+        }
+        .filter button {
+            margin: 0 5px;
+        }
+
+        /* Pesan sukses/error */
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+            background: #dfffef;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+            background: #ffeaea;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        /* Tombol aksi di tabel */
+        .btn-hapus {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-hapus:hover {
+            background: #c0392b;
+        }
+
+        /* Tombol logout & ganti password */
+        .top-buttons {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .logout-btn {
+            background: #e74c3c;
+        }
+        .pwd-btn {
+            background: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 🔹 INFO: Tanggal Login Terakhir -->
+        <p id="last-login-info" style="color: #7f8c8d; font-size: 14px;">
+            🔐 Terakhir login: <span id="last-login">Belum pernah</span>
+        </p>
+
+        <h1>📊 Dashboard Matematika Anak</h1>
+
+        <!-- 🔝 Tombol Logout & Ganti Password -->
+        <div class="top-buttons">
+            <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+            <button onclick="gantiPassword()" class="pwd-btn">🔐 Ganti Password</button>
+            <!-- 🔁 TOMBOL REFRESH -->
+            <button onclick="muatData()" style="background: #3498db;">🔁 Muat Ulang Data</button>
+        </div>
+
+        <!-- 🔹 FORM: Tambah Anak Baru -->
+        <div class="form">
+            <h2>➕ Tambah Anak Baru</h2>
+            <input type="text" id="nama-anak" placeholder="Nama Lengkap Anak (contoh: TEDI KUSNIADI)">
+            <input type="text" id="kode-anak" placeholder="Kode Unik (contoh: TEDI01)">
+            <button onclick="tambahAnak()">Tambahkan ke Sistem</button>
+            <p id="status-sukses" class="success"></p>
+            <p id="status-error" class="error"></p>
+        </div>
+
+        <!-- 🔹 FILTER & TOMBOL -->
+        <div class="filter">
+            <input type="text" id="cari-nama" placeholder="🔍 Cari nama anak..." onkeyup="filterTable()">
+            <button onclick="muatData()">🔄 Muat Ulang Data</button>
+        </div>
+
+        <!-- 🔹 TOMBOL RESET -->
+        <div class="filter" style="margin-top: 10px;">
+            <button onclick="resetKode()" style="background: #f39c12;">🔁 Reset Kode ke Default</button>
+            <button onclick="resetSkor()" style="background: #e74c3c;">🗑️ Hapus Semua Progres</button>
+        </div>
+
+        <!-- 🔹 TABEL: Progres Anak -->
+        <table id="tabel-progres">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Nama</th>
+                    <th>Kode</th>
+                    <th>Benar</th>
+                    <th>Total</th>
+                    <th>Akurasi</th>
+                    <th>Kuis</th>
+                    <th>Nilai</th>
+                    <th>Bintang</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        // 📦 Variabel global
+        let kodeMap = {};
+
+        // 🔁 Inisialisasi: Muat data saat halaman dibuka
+        async function muatKode() {
+            try {
+                const res = await fetch('/kode.json');
+                if (res.ok) {
+                    kodeMap = await res.json();
+                } else {
+                    throw new Error('File kode.json tidak ditemukan');
+                }
+            } catch (err) {
+                console.warn("Gagal muat kode.json: " + err.message);
+                alert("⚠️ File kode.json tidak ditemukan. Pastikan file ada di folder mathbot.");
+            }
+        }
+
+        // 💾 Simpan kode ke server (server.py)
+        async function simpanKode() {
+            try {
+                const res = await fetch('/simpan_kode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(kodeMap)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('status-sukses').textContent = "✅ Data berhasil disimpan!";
+                    document.getElementById('status-sukses').style.display = "block";
+                    setTimeout(() => {
+                        document.getElementById('status-sukses').style.display = "none";
+                    }, 3000);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (err) {
+                document.getElementById('status-error').textContent = "❌ Gagal simpan: " + err.message;
+                document.getElementById('status-error').style.display = "block";
+            }
+        }
+
+        // ➕ Tambah anak baru
+        function tambahAnak() {
+            const nama = document.getElementById('nama-anak').value.trim().toUpperCase();
+            const kode = document.getElementById('kode-anak').value.trim().toUpperCase();
+            const statusSukses = document.getElementById('status-sukses');
+            const statusError = document.getElementById('status-error');
+
+            // Reset pesan
+            statusSukses.style.display = "none";
+            statusError.style.display = "none";
+
+            if (!nama || !kode) {
+                statusError.textContent = "❌ Nama dan kode harus diisi.";
+                statusError.style.display = "block";
+                return;
+            }
+
+            if (kode.length < 4) {
+                statusError.textContent = "❌ Kode minimal 4 karakter (contoh: TEDI01).";
+                statusError.style.display = "block";
+                return;
+            }
+
+            if (kode in kodeMap) {
+                statusError.textContent = `❌ Kode ${kode} sudah digunakan oleh ${kodeMap[kode]}.`;
+                statusError.style.display = "block";
+                return;
+            }
+
+            // Tambah ke kodeMap
+            kodeMap[kode] = nama;
+            statusSukses.textContent = `✅ ${nama} berhasil ditambahkan dengan kode ${kode}!`;
+            statusSukses.style.display = "block";
+
+            // Simpan ke server
+            simpanKode();
+
+            // Reset form
+            document.getElementById('nama-anak').value = '';
+            document.getElementById('kode-anak').value = '';
+
+            // Muat ulang tabel
+            muatData();
+        }
+
+        // 🗑️ Hapus anak berdasarkan kode
+        function hapusAnak(kode) {
+            if (confirm(`Hapus kode ${kode} untuk ${kodeMap[kode]}?`)) {
+                delete kodeMap[kode];
+                simpanKode();
+                muatData();
+            }
+        }
+
+        // 🔁 Reset kode.json ke nilai default
+        function resetKode() {
+            if (confirm("Yakin reset kode ke default?")) {
+                fetch('/reset_kode', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("✅ kode.json berhasil direset!");
+                            muatKode().then(muatData);
+                        } else {
+                            alert("❌ Gagal reset: " + data.message);
+                        }
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            }
+        }
+
+        // 🗑️ Hapus semua progres (reset skor.json)
+        function resetSkor() {
+            if (confirm("Yakin hapus semua progres anak?")) {
+                fetch('/reset_skor', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("✅ Semua progres berhasil dihapus!");
+                            muatData();
+                        } else {
+                            alert("❌ Gagal reset skor");
+                        }
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            }
+        }
+
+        // 📊 Muat data progres dari skor.json
+        function muatData() {
+            fetch('/skor.json')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.querySelector('#tabel-progres tbody');
+                    tbody.innerHTML = '';
+                    Object.entries(data).forEach(([uid, usr]) => {
+                        const nama = usr.nama;
+                        let kode = "TIDAK ADA";
+                        for (const [k, v] of Object.entries(kodeMap)) {
+                            if (v === nama) { kode = k; break; }
+                        }
+                        const akurasi = usr.total_soal > 0 ? (usr.total_benar / usr.total_soal * 100).toFixed(1) : 0;
+                        const nilai = Math.round(akurasi);
+                        const bintang = nilai >= 90 ? '⭐⭐⭐⭐⭐' : 
+                                       nilai >= 75 ? '⭐⭐⭐⭐☆' : 
+                                       nilai >= 60 ? '⭐⭐⭐☆☆' : 
+                                       nilai >= 40 ? '⭐⭐☆☆☆' : 
+                                       nilai >= 20 ? '⭐☆☆☆☆' : '☆☆☆☆☆';
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${uid}</td>
+                            <td><b>${nama}</b></td>
+                            <td><code>${kode}</code></td>
+                            <td>${usr.total_benar}</td>
+                            <td>${usr.total_soal}</td>
+                            <td>${akurasi}%</td>
+                            <td>${usr.kuis_selesai}</td>
+                            <td><b>${nilai}</b></td>
+                            <td class="bintang">${bintang}</td>
+                            <td><button class="btn-hapus" onclick="hapusAnak('${kode}')">Hapus</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => {
+                    console.error('Gagal muat skor.json:', err);
+                    alert('❌ Gagal muat data anak. Pastikan skor.json ada.');
+                });
+        }
+
+        // 🔍 Filter tabel berdasarkan nama
+        function filterTable() {
+            const input = document.getElementById('cari-nama');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('tabel-progres');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td')[1]; // kolom nama
+                if (td) {
+                    const txt = td.textContent || td.innerText;
+                    tr[i].style.display = txt.toLowerCase().includes(filter) ? "" : "none";
+                }
+            }
+        }
+
+        // 🔐 Ganti Password
+        function gantiPassword() {
+            const old = prompt("Masukkan password lama:");
+            const new1 = prompt("Masukkan password baru:");
+            const new2 = prompt("Ulangi password baru:");
+
+            if (!old || !new1 || !new2) {
+                alert("❌ Semua kolom harus diisi.");
+                return;
+            }
+
+            if (new1 !== new2) {
+                alert("❌ Password baru tidak cocok.");
+                return;
+            }
+
+            if (new1.length < 4) {
+                alert("❌ Password minimal 4 karakter.");
+                return;
+            }
+
+            fetch('/ganti_password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    old_password: old,
+                    new_password1: new1,
+                    new_password2: new2
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("✅ Password berhasil diubah!");
+                } else {
+                    alert("❌ " + data.error);
+                }
+            })
+            .catch(err => {
+                alert("❌ Gagal menghubungi server: " + err.message);
+            });
+        }
+
+        // 🚪 Logout
+        function logout() {
+            if (confirm("Yakin ingin logout?")) {
+                fetch('/logout', { method: 'POST' })
+                    .then(() => {
+                        document.cookie = "logged_in=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                        window.location.href = '/login.html';
+                    })
+                    .catch(err => {
+                        alert("❌ Gagal logout: " + err.message);
+                    });
+            }
+        }
+
+        // 📅 Tampilkan Tanggal Login Terakhir
+        function tampilkanLoginTerakhir() {
+            const last = localStorage.getItem('last_login');
+            const el = document.getElementById('last-login');
+            if (last) {
+                const date = new Date(last);
+                el.textContent = date.toLocaleString('id-ID');
+            } else {
+                el.textContent = "Belum pernah";
+            }
+        }
+
+        // 🚀 Inisialisasi: Muat data saat halaman selesai loading
+        window.onload = function () {
+            tampilkanLoginTerakhir();
+            muatKode().then(() => {
+                muatData();
+                // Auto-refresh tiap 30 detik
+                setInterval(muatData, 30000);
+            });
+        };
+    </script>
+</body>
+</html>
